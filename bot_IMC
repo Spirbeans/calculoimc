@@ -1,1 +1,72 @@
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
+api_id = ''
+api_hash = ''
+bot_token = ''
+owner_id = ''
+
+bot = Client('mention_bot', api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+
+
+@bot.on_message(filters.command('start'))
+def start(_, Message):
+    Message.reply('bem vindo! use o comando /calcular_imc para calcular seu IMC.')
+
+@bot.on_message(filters.command('calcular_imc'))
+def calcular_imc(_, Message):
+    Message.reply('Por favor, digita seu peso (em quilos).')
+
+
+@bot.on_message(filters.text & filters.regex(r'^\d (\.\d )?$') & filters.command(['/calcular_imc', 'Help']))
+def receber_peso(_, Message):
+    try:
+        peso = float(Message.text)
+        Message.reply('Agora, digite sua altura (em metros).')
+        Message.conf['peso'] = peso 
+
+    except ValueError:
+        bot.send_message(Message.chat.id, 'Por favor, insira um valor de peso valido')
+
+
+
+@bot.on_message(filters.text & filters.regex(r'^\d (\.\d )?$') & filters.command(['/calcular_imc', 'Help']) & filters.create(lambda _, message: 'peso' in message.conf))
+def receber_altura(_, message):
+    try:
+        altura = float(message.text)
+        peso = message.conf['peso']
+
+        imc = peso / (altura ** 2)
+        resposta = f'Seu IMC é {imc:.2f}.\n'
+
+        if imc < 14:
+            resposta  = 'NA CAPA DA COSTELA'
+        elif imc <= 18.5:
+            resposta  = 'Você está ABAIXO DO PESO normal'
+        elif 18.5 < imc <= 25:
+            resposta  = 'Peso Normal'
+        elif 25 < imc <= 30:
+            resposta  = 'Você está com SOBREPESO'
+        elif 30 < imc <= 40:
+            resposta  = 'Você está OBESO, cuidado!'
+        elif imc > 40:
+            resposta  = 'Você está em OBESIDADE MORBIDA, cuidado'
+
+        bot.send_message(message.chat.id, resposta)
+
+    except ValueError:
+        bot.send_message(message.chat.id, 'Por favor, insira um valor de altura válido.')
+
+    except Exception as e:
+        bot.send_message(message.chat.id, f'Ocorreu um erro: {str(e)}')
+
+    else:
+        bot.send_message(message.chat.id, 'Cálculo do IMC concluído com sucesso!')
+    finally:
+        # Limpar a informação de peso após o cálculo
+        if 'peso' in message.conf:
+            del message.conf['peso']
+
+if __name__ == '__main__':
+    bot.run()
