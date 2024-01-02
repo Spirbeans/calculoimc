@@ -41,7 +41,7 @@ def receber_altura(_, message):
         resposta = f'Seu IMC é {imc:.2f}.\n'
 
         if imc < 14:
-            resposta  = 'NA CAPA DA COSTELA'
+            resposta  = 'Magreza Extrema'
         elif imc <= 18.5:
             resposta  = 'Você está ABAIXO DO PESO normal'
         elif 18.5 < imc <= 25:
